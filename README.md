@@ -1,1 +1,1 @@
-# foundations-of-frontend
+# foundations-of-frontend - web development LABS
