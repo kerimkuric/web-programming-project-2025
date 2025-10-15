@@ -1,1 +1,1 @@
-# foundations-of-frontend - web development LABS
+# Web programming PROJECT
