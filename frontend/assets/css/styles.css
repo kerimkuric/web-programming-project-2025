@@ -1,0 +1,11 @@
+﻿/* Theme: clean, blue primary, responsive cards and tables */
+:root { --brand: #0d6efd; }
+body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; }
+.navbar-brand { font-weight: 700; letter-spacing: .3px; }
+.hero { background: linear-gradient(135deg, var(--brand), #6610f2); color: #fff; border-radius: .75rem; }
+.card-shadow { box-shadow: 0 0.25rem 1rem rgba(0,0,0,.08); }
+.table thead th { background:#f8f9fa; }
+.view-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:1rem; }
+.view-header h1 { font-size:1.5rem; margin:0; }
+form .form-text { font-size:.85rem; }
+footer { color:#6c757d; }
