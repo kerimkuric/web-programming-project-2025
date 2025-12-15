@@ -54,7 +54,6 @@ Flight::route('GET /api/books', function()  {
  */
 Flight::route('GET /api/books/@id', function($id)  {
     try {
-        LoggerMiddleware::logRequest();
         // Public route - no authentication required
         $book = Flight::bookService()->getById($id);
         if ($book) {
@@ -286,7 +285,6 @@ Flight::route('DELETE /api/books/@id', function($id)  {
  */
 Flight::route('GET /api/books/author/@authorId', function($authorId)  {
     try {
-        LoggerMiddleware::logRequest();
         // Public route - no authentication required
         $books = Flight::bookService()->getByAuthor($authorId);
         Flight::json([
@@ -322,7 +320,6 @@ Flight::route('GET /api/books/author/@authorId', function($authorId)  {
  */
 Flight::route('GET /api/books/genre/@genreId', function($genreId)  {
     try {
-        LoggerMiddleware::logRequest();
         // Public route - no authentication required
         $books = Flight::bookService()->getByGenre($genreId);
         Flight::json([

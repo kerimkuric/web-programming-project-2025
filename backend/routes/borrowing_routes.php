@@ -13,7 +13,6 @@
  */
 Flight::route('GET /api/borrowings', function()  {
     try {
-        LoggerMiddleware::logRequest();
         
         // Require authentication
         if (!AuthMiddleware::authenticate()) {
@@ -35,7 +34,10 @@ Flight::route('GET /api/borrowings', function()  {
             'count' => count($borrowings)
         ], 200);
     } catch (Exception $e) {
-        ErrorHandlerMiddleware::handleError($e);
+        Flight::json([
+            'success' => false,
+            'message' => $e->getMessage()
+        ], 500);
     }
 });
 
@@ -63,7 +65,6 @@ Flight::route('GET /api/borrowings', function()  {
  */
 Flight::route('GET /api/borrowings/@id', function($id)  {
     try {
-        LoggerMiddleware::logRequest();
         
         // Require authentication
         if (!AuthMiddleware::authenticate()) {
@@ -95,7 +96,10 @@ Flight::route('GET /api/borrowings/@id', function($id)  {
             'data' => $borrowing
         ], 200);
     } catch (Exception $e) {
-        ErrorHandlerMiddleware::handleError($e);
+        Flight::json([
+            'success' => false,
+            'message' => $e->getMessage()
+        ], 500);
     }
 });
 
@@ -125,7 +129,6 @@ Flight::route('GET /api/borrowings/@id', function($id)  {
  */
 Flight::route('POST /api/borrowings', function()  {
     try {
-        LoggerMiddleware::logRequest();
         
         // Require authentication
         if (!AuthMiddleware::authenticate()) {
@@ -174,7 +177,10 @@ Flight::route('POST /api/borrowings', function()  {
             'data' => $borrowing
         ], 201);
     } catch (Exception $e) {
-        ErrorHandlerMiddleware::handleError($e);
+        Flight::json([
+            'success' => false,
+            'message' => $e->getMessage()
+        ], 500);
     }
 });
 
@@ -211,7 +217,6 @@ Flight::route('POST /api/borrowings', function()  {
  */
 Flight::route('PUT /api/borrowings/@id', function($id)  {
     try {
-        LoggerMiddleware::logRequest();
         
         // Require admin authentication
         if (!AuthMiddleware::authenticate() || !RoleMiddleware::requireAdmin()) {
@@ -253,7 +258,10 @@ Flight::route('PUT /api/borrowings/@id', function($id)  {
             'data' => $updatedBorrowing
         ], 200);
     } catch (Exception $e) {
-        ErrorHandlerMiddleware::handleError($e);
+        Flight::json([
+            'success' => false,
+            'message' => $e->getMessage()
+        ], 500);
     }
 });
 
@@ -281,7 +289,6 @@ Flight::route('PUT /api/borrowings/@id', function($id)  {
  */
 Flight::route('DELETE /api/borrowings/@id', function($id)  {
     try {
-        LoggerMiddleware::logRequest();
         
         // Require admin authentication
         if (!AuthMiddleware::authenticate() || !RoleMiddleware::requireAdmin()) {
@@ -304,7 +311,10 @@ Flight::route('DELETE /api/borrowings/@id', function($id)  {
             'message' => 'Borrowing deleted successfully'
         ], 200);
     } catch (Exception $e) {
-        ErrorHandlerMiddleware::handleError($e);
+        Flight::json([
+            'success' => false,
+            'message' => $e->getMessage()
+        ], 500);
     }
 });
 
@@ -332,7 +342,6 @@ Flight::route('DELETE /api/borrowings/@id', function($id)  {
  */
 Flight::route('POST /api/borrowings/@id/return', function($id)  {
     try {
-        LoggerMiddleware::logRequest();
         
         // Require authentication
         if (!AuthMiddleware::authenticate()) {
@@ -368,7 +377,10 @@ Flight::route('POST /api/borrowings/@id/return', function($id)  {
             'data' => $borrowing
         ], 200);
     } catch (Exception $e) {
-        ErrorHandlerMiddleware::handleError($e);
+        Flight::json([
+            'success' => false,
+            'message' => $e->getMessage()
+        ], 500);
     }
 });
 
@@ -392,7 +404,6 @@ Flight::route('POST /api/borrowings/@id/return', function($id)  {
  */
 Flight::route('GET /api/borrowings/user/@userId', function($userId)  {
     try {
-        LoggerMiddleware::logRequest();
         
         // Require authentication
         if (!AuthMiddleware::authenticate()) {
@@ -417,7 +428,10 @@ Flight::route('GET /api/borrowings/user/@userId', function($userId)  {
             'count' => count($borrowings)
         ], 200);
     } catch (Exception $e) {
-        ErrorHandlerMiddleware::handleError($e);
+        Flight::json([
+            'success' => false,
+            'message' => $e->getMessage()
+        ], 500);
     }
 });
 
@@ -441,7 +455,6 @@ Flight::route('GET /api/borrowings/user/@userId', function($userId)  {
  */
 Flight::route('GET /api/borrowings/book/@bookId', function($bookId)  {
     try {
-        LoggerMiddleware::logRequest();
         
         // Require admin authentication
         if (!AuthMiddleware::authenticate() || !RoleMiddleware::requireAdmin()) {
@@ -455,7 +468,10 @@ Flight::route('GET /api/borrowings/book/@bookId', function($bookId)  {
             'count' => count($borrowings)
         ], 200);
     } catch (Exception $e) {
-        ErrorHandlerMiddleware::handleError($e);
+        Flight::json([
+            'success' => false,
+            'message' => $e->getMessage()
+        ], 500);
     }
 });
 
@@ -472,7 +488,6 @@ Flight::route('GET /api/borrowings/book/@bookId', function($bookId)  {
  */
 Flight::route('GET /api/borrowings/active', function()  {
     try {
-        LoggerMiddleware::logRequest();
         
         // Require authentication
         if (!AuthMiddleware::authenticate()) {
@@ -497,7 +512,10 @@ Flight::route('GET /api/borrowings/active', function()  {
             'count' => count($borrowings)
         ], 200);
     } catch (Exception $e) {
-        ErrorHandlerMiddleware::handleError($e);
+        Flight::json([
+            'success' => false,
+            'message' => $e->getMessage()
+        ], 500);
     }
 });
 

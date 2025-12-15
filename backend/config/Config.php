@@ -24,7 +24,7 @@ class Config
 
     public static function DB_PASSWORD()
     {
-        return '';
+        return 'admin';
     }
 
     public static function DB_HOST()

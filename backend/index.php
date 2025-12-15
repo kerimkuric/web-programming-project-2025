@@ -51,8 +51,11 @@ Flight::route('/*', function() {
     
     // Public routes that don't require authentication
     if(
-        strpos($requestUrl, '/auth/login') === 0 ||
-        strpos($requestUrl, '/auth/register') === 0 ||
+        strpos($requestUrl, '/api/auth/login') === 0 ||
+        strpos($requestUrl, '/api/auth/register') === 0 ||
+        strpos($requestUrl, '/api/books') === 0 ||
+        strpos($requestUrl, '/api/authors') === 0 ||
+        strpos($requestUrl, '/api/genres') === 0 ||
         strpos($requestUrl, '/public/') === 0
     ) {
         return TRUE;
