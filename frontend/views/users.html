@@ -2,24 +2,44 @@
   <h1>Users</h1>
   <a href="#/register" class="btn btn-sm btn-outline-primary admin-only" id="addUserBtn" style="display: none;">Register User</a>
 </div>
-<script>
-  // Users view is admin-only
-  if (!AuthService.isAuthenticated() || !AuthService.isAdmin()) {
-    window.location.hash = '#/dashboard';
-  } else {
-    document.getElementById('addUserBtn').style.display = 'inline-block';
-  }
-</script>
 <div class="card card-shadow">
   <div class="card-body">
     <div class="table-responsive">
       <table class="table align-middle">
         <thead><tr><th>Name</th><th>Email</th><th>Phone</th><th>Role</th><th></th></tr></thead>
-        <tbody>
-          <tr><td>Alex Johnson</td><td>alex@example.com</td><td>+1 555 0100</td><td>Admin</td><td><button class="btn btn-sm btn-outline-secondary">View</button></td></tr>
-          <tr><td>Sam Lee</td><td>sam@example.com</td><td>+1 555 0160</td><td>Member</td><td><button class="btn btn-sm btn-outline-secondary">View</button></td></tr>
+        <tbody id="usersTableBody">
+          <tr><td colspan="5" class="text-center">Loading...</td></tr>
         </tbody>
       </table>
     </div>
   </div>
 </div>
+<script>
+  (function() {
+    const user = UserService.getCurrentUser();
+    if (!user || user.role !== Constants.ADMIN_ROLE) {
+      window.location.hash = '#/dashboard';
+      return;
+    }
+    document.getElementById('addUserBtn').style.display = 'inline-block';
+    
+    RestClient.get('users', function(response) {
+      const tbody = document.getElementById('usersTableBody');
+      if (response.success && response.data && response.data.length > 0) {
+        tbody.innerHTML = response.data.map(user => 
+          `<tr>
+            <td>${user.name || ''}</td>
+            <td>${user.email || ''}</td>
+            <td>${user.phone || ''}</td>
+            <td>${user.is_admin ? 'Admin' : 'Member'}</td>
+            <td><button class="btn btn-sm btn-outline-secondary">View</button></td>
+          </tr>`
+        ).join('');
+      } else {
+        tbody.innerHTML = '<tr><td colspan="5" class="text-center">No users found</td></tr>';
+      }
+    }, function(error) {
+      document.getElementById('usersTableBody').innerHTML = '<tr><td colspan="5" class="text-center text-danger">Failed to load users</td></tr>';
+    });
+  })();
+</script>

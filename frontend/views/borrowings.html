@@ -7,11 +7,74 @@
     <div class="table-responsive">
       <table class="table align-middle">
         <thead><tr><th>Book</th><th>User</th><th>Borrowed</th><th>Due</th><th>Status</th></tr></thead>
-        <tbody>
-          <tr><td>1984</td><td>Sam Lee</td><td>2025-10-10</td><td>2025-10-24</td><td><span class="badge bg-warning text-dark">On loan</span></td></tr>
-          <tr><td>Pride and Prejudice</td><td>Alex Johnson</td><td>2025-09-20</td><td>2025-10-04</td><td><span class="badge bg-success">Returned</span></td></tr>
+        <tbody id="borrowingsTableBody">
+          <tr><td colspan="5" class="text-center">Loading...</td></tr>
         </tbody>
       </table>
     </div>
   </div>
 </div>
+<script>
+  (function() {
+    const token = localStorage.getItem("user_token");
+    if (!token) {
+      window.location.hash = '#/login';
+      return;
+    }
+    
+    let allBooks = [];
+    let allUsers = [];
+    
+    function loadBooks() {
+      RestClient.get('books', function(response) {
+        if (response.success && response.data) {
+          allBooks = response.data;
+          loadUsers();
+        } else {
+          loadBorrowings();
+        }
+      }, function() {
+        loadBorrowings();
+      });
+    }
+    
+    function loadUsers() {
+      RestClient.get('users', function(response) {
+        if (response.success && response.data) {
+          allUsers = response.data;
+        }
+        loadBorrowings();
+      }, function() {
+        loadBorrowings();
+      });
+    }
+    
+    function loadBorrowings() {
+      RestClient.get('borrowings', function(response) {
+        const tbody = document.getElementById('borrowingsTableBody');
+        if (response.success && response.data && response.data.length > 0) {
+          tbody.innerHTML = response.data.map(borrowing => {
+            const book = allBooks.find(b => b.book_id === borrowing.book_id);
+            const user = allUsers.find(u => u.user_id === borrowing.user_id);
+            const isReturned = borrowing.return_date !== null;
+            const statusClass = isReturned ? 'bg-success' : 'bg-warning text-dark';
+            const statusText = isReturned ? 'Returned' : 'On loan';
+            return `<tr>
+              <td>${book ? book.title : ''}</td>
+              <td>${user ? user.name : ''}</td>
+              <td>${borrowing.borrow_date || ''}</td>
+              <td>${borrowing.due_date || ''}</td>
+              <td><span class="badge ${statusClass}">${statusText}</span></td>
+            </tr>`;
+          }).join('');
+        } else {
+          tbody.innerHTML = '<tr><td colspan="5" class="text-center">No borrowings found</td></tr>';
+        }
+      }, function() {
+        document.getElementById('borrowingsTableBody').innerHTML = '<tr><td colspan="5" class="text-center text-danger">Failed to load borrowings</td></tr>';
+      });
+    }
+    
+    loadBooks();
+  })();
+</script>
