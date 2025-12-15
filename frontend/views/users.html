@@ -1,7 +1,15 @@
 ﻿<div class="view-header">
   <h1>Users</h1>
-  <a href="#/register" class="btn btn-sm btn-outline-primary">Register User</a>
+  <a href="#/register" class="btn btn-sm btn-outline-primary admin-only" id="addUserBtn" style="display: none;">Register User</a>
 </div>
+<script>
+  // Users view is admin-only
+  if (!AuthService.isAuthenticated() || !AuthService.isAdmin()) {
+    window.location.hash = '#/dashboard';
+  } else {
+    document.getElementById('addUserBtn').style.display = 'inline-block';
+  }
+</script>
 <div class="card card-shadow">
   <div class="card-body">
     <div class="table-responsive">

@@ -1,6 +1,11 @@
 ﻿<div class="view-header">
   <h1>Genres</h1>
-  <a href="#/genres" class="btn btn-sm btn-outline-primary">Add Genre</a>
+  <a href="#/genres" class="btn btn-sm btn-outline-primary admin-only" id="addGenreBtn" style="display: none;">Add Genre</a>
+<script>
+  if (AuthService.isAuthenticated() && AuthService.isAdmin()) {
+    document.getElementById('addGenreBtn').style.display = 'inline-block';
+  }
+</script>
 </div>
 <div class="card card-shadow">
   <div class="card-body">

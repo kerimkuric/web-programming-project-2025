@@ -13,17 +13,29 @@
  */
 Flight::route('GET /api/borrowings', function()  {
     try {
-        $borrowings = Flight::borrowingService()->getAll();
+        LoggerMiddleware::logRequest();
+        
+        // Require authentication
+        if (!AuthMiddleware::authenticate()) {
+            return;
+        }
+        
+        $currentUser = AuthMiddleware::getCurrentUser();
+        
+        // Admin sees all, regular users see only their own
+        if ($currentUser['is_admin']) {
+            $borrowings = Flight::borrowingService()->getAll();
+        } else {
+            $borrowings = Flight::borrowingService()->getByUserId($currentUser['user_id']);
+        }
+        
         Flight::json([
             'success' => true,
-            'data' => $borrowings,
+            'data' => array_values($borrowings),
             'count' => count($borrowings)
         ], 200);
     } catch (Exception $e) {
-        Flight::json([
-            'success' => false,
-            'message' => $e->getMessage()
-        ], 500);
+        ErrorHandlerMiddleware::handleError($e);
     }
 });
 
@@ -51,23 +63,39 @@ Flight::route('GET /api/borrowings', function()  {
  */
 Flight::route('GET /api/borrowings/@id', function($id)  {
     try {
+        LoggerMiddleware::logRequest();
+        
+        // Require authentication
+        if (!AuthMiddleware::authenticate()) {
+            return;
+        }
+        
+        $currentUser = AuthMiddleware::getCurrentUser();
         $borrowing = Flight::borrowingService()->getById($id);
-        if ($borrowing) {
-            Flight::json([
-                'success' => true,
-                'data' => $borrowing
-            ], 200);
-        } else {
+        
+        if (!$borrowing) {
             Flight::json([
                 'success' => false,
                 'message' => 'Borrowing not found'
             ], 404);
+            return;
         }
-    } catch (Exception $e) {
+        
+        // Users can only view their own borrowings, admins can view any
+        if (!$currentUser['is_admin'] && $borrowing['user_id'] != $currentUser['user_id']) {
+            Flight::json([
+                'success' => false,
+                'message' => 'Access denied'
+            ], 403);
+            return;
+        }
+        
         Flight::json([
-            'success' => false,
-            'message' => $e->getMessage()
-        ], 500);
+            'success' => true,
+            'data' => $borrowing
+        ], 200);
+    } catch (Exception $e) {
+        ErrorHandlerMiddleware::handleError($e);
     }
 });
 
@@ -97,6 +125,15 @@ Flight::route('GET /api/borrowings/@id', function($id)  {
  */
 Flight::route('POST /api/borrowings', function()  {
     try {
+        LoggerMiddleware::logRequest();
+        
+        // Require authentication
+        if (!AuthMiddleware::authenticate()) {
+            return;
+        }
+        
+        $currentUser = AuthMiddleware::getCurrentUser();
+        
         // Get request body
         $rawBody = Flight::request()->getBody();
         $data = json_decode($rawBody, true);
@@ -113,6 +150,20 @@ Flight::route('POST /api/borrowings', function()  {
             ], 400);
             return;
         }
+        
+        // Regular users can only create borrowings for themselves
+        if (!$currentUser['is_admin'] && (!isset($data['user_id']) || $data['user_id'] != $currentUser['user_id'])) {
+            Flight::json([
+                'success' => false,
+                'message' => 'Access denied. You can only create borrowings for yourself.'
+            ], 403);
+            return;
+        }
+        
+        // Auto-set user_id for regular users
+        if (!$currentUser['is_admin'] && !isset($data['user_id'])) {
+            $data['user_id'] = $currentUser['user_id'];
+        }
 
         $borrowingId = Flight::borrowingService()->createBorrowing($data);
         $borrowing = Flight::borrowingService()->getById($borrowingId);
@@ -123,10 +174,7 @@ Flight::route('POST /api/borrowings', function()  {
             'data' => $borrowing
         ], 201);
     } catch (Exception $e) {
-        Flight::json([
-            'success' => false,
-            'message' => $e->getMessage()
-        ], 400);
+        ErrorHandlerMiddleware::handleError($e);
     }
 });
 
@@ -163,6 +211,13 @@ Flight::route('POST /api/borrowings', function()  {
  */
 Flight::route('PUT /api/borrowings/@id', function($id)  {
     try {
+        LoggerMiddleware::logRequest();
+        
+        // Require admin authentication
+        if (!AuthMiddleware::authenticate() || !RoleMiddleware::requireAdmin()) {
+            return; // Response already sent by middleware
+        }
+        
         // Get request body
         $rawBody = Flight::request()->getBody();
         $data = json_decode($rawBody, true);
@@ -198,10 +253,7 @@ Flight::route('PUT /api/borrowings/@id', function($id)  {
             'data' => $updatedBorrowing
         ], 200);
     } catch (Exception $e) {
-        Flight::json([
-            'success' => false,
-            'message' => $e->getMessage()
-        ], 400);
+        ErrorHandlerMiddleware::handleError($e);
     }
 });
 
@@ -229,6 +281,13 @@ Flight::route('PUT /api/borrowings/@id', function($id)  {
  */
 Flight::route('DELETE /api/borrowings/@id', function($id)  {
     try {
+        LoggerMiddleware::logRequest();
+        
+        // Require admin authentication
+        if (!AuthMiddleware::authenticate() || !RoleMiddleware::requireAdmin()) {
+            return; // Response already sent by middleware
+        }
+        
         $borrowing = Flight::borrowingService()->getById($id);
         if (!$borrowing) {
             Flight::json([
@@ -245,10 +304,7 @@ Flight::route('DELETE /api/borrowings/@id', function($id)  {
             'message' => 'Borrowing deleted successfully'
         ], 200);
     } catch (Exception $e) {
-        Flight::json([
-            'success' => false,
-            'message' => $e->getMessage()
-        ], 500);
+        ErrorHandlerMiddleware::handleError($e);
     }
 });
 
@@ -276,6 +332,33 @@ Flight::route('DELETE /api/borrowings/@id', function($id)  {
  */
 Flight::route('POST /api/borrowings/@id/return', function($id)  {
     try {
+        LoggerMiddleware::logRequest();
+        
+        // Require authentication
+        if (!AuthMiddleware::authenticate()) {
+            return;
+        }
+        
+        $currentUser = AuthMiddleware::getCurrentUser();
+        $borrowing = Flight::borrowingService()->getById($id);
+        
+        if (!$borrowing) {
+            Flight::json([
+                'success' => false,
+                'message' => 'Borrowing not found'
+            ], 404);
+            return;
+        }
+        
+        // Users can only return their own borrowings, admins can return any
+        if (!$currentUser['is_admin'] && $borrowing['user_id'] != $currentUser['user_id']) {
+            Flight::json([
+                'success' => false,
+                'message' => 'Access denied. You can only return your own borrowings.'
+            ], 403);
+            return;
+        }
+        
         Flight::borrowingService()->returnBook($id);
         $borrowing = Flight::borrowingService()->getById($id);
         
@@ -285,10 +368,7 @@ Flight::route('POST /api/borrowings/@id/return', function($id)  {
             'data' => $borrowing
         ], 200);
     } catch (Exception $e) {
-        Flight::json([
-            'success' => false,
-            'message' => $e->getMessage()
-        ], 400);
+        ErrorHandlerMiddleware::handleError($e);
     }
 });
 
@@ -312,6 +392,24 @@ Flight::route('POST /api/borrowings/@id/return', function($id)  {
  */
 Flight::route('GET /api/borrowings/user/@userId', function($userId)  {
     try {
+        LoggerMiddleware::logRequest();
+        
+        // Require authentication
+        if (!AuthMiddleware::authenticate()) {
+            return;
+        }
+        
+        $currentUser = AuthMiddleware::getCurrentUser();
+        
+        // Users can only view their own borrowings, admins can view any user's borrowings
+        if (!$currentUser['is_admin'] && $currentUser['user_id'] != $userId) {
+            Flight::json([
+                'success' => false,
+                'message' => 'Access denied'
+            ], 403);
+            return;
+        }
+        
         $borrowings = Flight::borrowingService()->getByUserId($userId);
         Flight::json([
             'success' => true,
@@ -319,10 +417,7 @@ Flight::route('GET /api/borrowings/user/@userId', function($userId)  {
             'count' => count($borrowings)
         ], 200);
     } catch (Exception $e) {
-        Flight::json([
-            'success' => false,
-            'message' => $e->getMessage()
-        ], 500);
+        ErrorHandlerMiddleware::handleError($e);
     }
 });
 
@@ -346,6 +441,13 @@ Flight::route('GET /api/borrowings/user/@userId', function($userId)  {
  */
 Flight::route('GET /api/borrowings/book/@bookId', function($bookId)  {
     try {
+        LoggerMiddleware::logRequest();
+        
+        // Require admin authentication
+        if (!AuthMiddleware::authenticate() || !RoleMiddleware::requireAdmin()) {
+            return; // Response already sent by middleware
+        }
+        
         $borrowings = Flight::borrowingService()->getByBookId($bookId);
         Flight::json([
             'success' => true,
@@ -353,10 +455,7 @@ Flight::route('GET /api/borrowings/book/@bookId', function($bookId)  {
             'count' => count($borrowings)
         ], 200);
     } catch (Exception $e) {
-        Flight::json([
-            'success' => false,
-            'message' => $e->getMessage()
-        ], 500);
+        ErrorHandlerMiddleware::handleError($e);
     }
 });
 
@@ -373,17 +472,32 @@ Flight::route('GET /api/borrowings/book/@bookId', function($bookId)  {
  */
 Flight::route('GET /api/borrowings/active', function()  {
     try {
-        $borrowings = Flight::borrowingService()->getActiveBorrowings();
+        LoggerMiddleware::logRequest();
+        
+        // Require authentication
+        if (!AuthMiddleware::authenticate()) {
+            return;
+        }
+        
+        $currentUser = AuthMiddleware::getCurrentUser();
+        
+        // Admin sees all active borrowings, users see only their own active borrowings
+        if ($currentUser['is_admin']) {
+            $borrowings = Flight::borrowingService()->getActiveBorrowings();
+        } else {
+            $allBorrowings = Flight::borrowingService()->getByUserId($currentUser['user_id']);
+            $borrowings = array_filter($allBorrowings, function($b) {
+                return empty($b['return_date']);
+            });
+        }
+        
         Flight::json([
             'success' => true,
             'data' => array_values($borrowings),
             'count' => count($borrowings)
         ], 200);
     } catch (Exception $e) {
-        Flight::json([
-            'success' => false,
-            'message' => $e->getMessage()
-        ], 500);
+        ErrorHandlerMiddleware::handleError($e);
     }
 });
 

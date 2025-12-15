@@ -1,8 +1,13 @@
 ﻿<div class="hero p-4 p-lg-5 mb-4">
-  <h1 class="display-6">Welcome to the Library</h1>
-  <p class="lead mb-0">Manage books, authors, genres, users, and borrowings.</p>
+  <h1 class="display-6" id="welcomeTitle">Welcome to the Library</h1>
+  <p class="lead mb-0" id="welcomeSubtitle">Manage books, authors, genres, users, and borrowings.</p>
 </div>
-<div class="row g-4">
+
+<div id="dashboardStats" class="row g-4 mb-4">
+  <!-- Stats will be loaded here -->
+</div>
+
+<div class="row g-4 mb-4">
   <div class="col-md-4">
     <div class="card card-shadow"><div class="card-body">
       <h5 class="card-title mb-2">Books</h5>
@@ -17,7 +22,7 @@
       <a href="#/borrowings" class="btn btn-primary btn-sm">Open</a>
     </div></div>
   </div>
-  <div class="col-md-4">
+  <div class="col-md-4 admin-only">
     <div class="card card-shadow"><div class="card-body">
       <h5 class="card-title mb-2">Users</h5>
       <p class="text-muted">Members and librarians.</p>
@@ -25,5 +30,138 @@
     </div></div>
   </div>
 </div>
+
+<div class="row g-4 mb-4" id="myBorrowingsSection">
+  <div class="col-12">
+    <div class="card card-shadow">
+      <div class="card-body">
+        <h5 class="card-title mb-3">My Active Borrowings</h5>
+        <div id="myBorrowingsList">
+          <p class="text-muted">Loading...</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
 <footer class="mt-5 small"> <span id="year"></span> Library Management System</footer>
-<script>document.getElementById('year').textContent=new Date().getFullYear();</script>
+<script>
+  document.getElementById('year').textContent = new Date().getFullYear();
+  
+  // Load dashboard data
+  async function loadDashboard() {
+    const user = AuthService.getUser();
+    const isAdmin = AuthService.isAdmin();
+    
+    // Update welcome message
+    if (user) {
+      document.getElementById('welcomeTitle').textContent = `Welcome back, ${user.name}!`;
+      document.getElementById('welcomeSubtitle').textContent = 
+        isAdmin ? 'Manage the library system and all resources.' : 'Browse books and manage your borrowings.';
+    }
+    
+    // Hide admin-only sections
+    document.querySelectorAll('.admin-only').forEach(el => {
+      el.style.display = isAdmin ? 'block' : 'none';
+    });
+    
+    // Load stats (admin sees all, users see limited)
+    const statsDiv = document.getElementById('dashboardStats');
+    try {
+      const [booksResult, borrowingsResult] = await Promise.all([
+        API.getBooks(),
+        isAdmin ? API.getBorrowings() : API.getActiveBorrowings()
+      ]);
+      
+      let statsHTML = `
+        <div class="col-md-4">
+          <div class="card card-shadow">
+            <div class="card-body">
+              <h5 class="card-title">Total Books</h5>
+              <h2 class="display-4">${booksResult.success ? booksResult.count : 0}</h2>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-4">
+          <div class="card card-shadow">
+            <div class="card-body">
+              <h5 class="card-title">${isAdmin ? 'Total Borrowings' : 'My Active Borrowings'}</h5>
+              <h2 class="display-4">${borrowingsResult.success ? borrowingsResult.count : 0}</h2>
+            </div>
+          </div>
+        </div>
+      `;
+      
+      if (isAdmin) {
+        const usersResult = await API.getUsers();
+        statsHTML += `
+          <div class="col-md-4">
+            <div class="card card-shadow">
+              <div class="card-body">
+                <h5 class="card-title">Total Users</h5>
+                <h2 class="display-4">${usersResult.success ? usersResult.count : 0}</h2>
+              </div>
+            </div>
+          </div>
+        `;
+      }
+      
+      statsDiv.innerHTML = statsHTML;
+    } catch (error) {
+      console.error('Error loading stats:', error);
+    }
+    
+    // Load user's active borrowings
+    if (!isAdmin && user) {
+      try {
+        const result = await API.getBorrowingsByUser(user.id);
+        const borrowingsList = document.getElementById('myBorrowingsList');
+        
+        if (result.success && result.data.length > 0) {
+          const activeBorrowings = result.data.filter(b => !b.return_date);
+          
+          if (activeBorrowings.length > 0) {
+            borrowingsList.innerHTML = `
+              <div class="table-responsive">
+                <table class="table">
+                  <thead>
+                    <tr>
+                      <th>Book ID</th>
+                      <th>Borrow Date</th>
+                      <th>Status</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    ${activeBorrowings.slice(0, 5).map(b => `
+                      <tr>
+                        <td>${b.book_id}</td>
+                        <td>${b.borrow_date}</td>
+                        <td><span class="badge bg-warning">Active</span></td>
+                      </tr>
+                    `).join('')}
+                  </tbody>
+                </table>
+              </div>
+              ${activeBorrowings.length > 5 ? `<p class="text-muted">Showing 5 of ${activeBorrowings.length} active borrowings. <a href="#/borrowings">View all</a></p>` : ''}
+            `;
+          } else {
+            borrowingsList.innerHTML = '<p class="text-muted">You have no active borrowings.</p>';
+          }
+        } else {
+          borrowingsList.innerHTML = '<p class="text-muted">You have no active borrowings.</p>';
+        }
+      } catch (error) {
+        document.getElementById('myBorrowingsList').innerHTML = '<p class="text-danger">Error loading borrowings.</p>';
+      }
+    } else {
+      document.getElementById('myBorrowingsSection').style.display = 'none';
+    }
+  }
+  
+  // Check if user is authenticated
+  if (!AuthService.isAuthenticated()) {
+    window.location.hash = '#/login';
+  } else {
+    loadDashboard();
+  }
+</script>

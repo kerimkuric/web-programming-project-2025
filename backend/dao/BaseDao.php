@@ -52,6 +52,16 @@ class BaseDao {
         $statement->bindParam(':id', $id);
         return $statement->execute();
     }
+
+    public function query_unique($query, $params) {
+        $statement = $this->connection->prepare($query);
+        $statement->execute($params);
+        return $statement->fetch();
+    }
+
+    public function add($data) {
+        return $this->insert($data);
+    }
 }
 
 ?>

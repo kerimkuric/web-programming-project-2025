@@ -1,6 +1,11 @@
 ﻿<div class="view-header">
   <h1>Authors</h1>
-  <a href="#/authors" class="btn btn-sm btn-outline-primary">Add Author</a>
+  <a href="#/authors" class="btn btn-sm btn-outline-primary admin-only" id="addAuthorBtn" style="display: none;">Add Author</a>
+<script>
+  if (AuthService.isAuthenticated() && AuthService.isAdmin()) {
+    document.getElementById('addAuthorBtn').style.display = 'inline-block';
+  }
+</script>
 </div>
 <div class="card card-shadow">
   <div class="card-body">

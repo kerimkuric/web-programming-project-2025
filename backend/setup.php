@@ -1,5 +1,4 @@
 <?php
-<?php
 function setupDatabase() {
     try {
         $pdo = new PDO("mysql:host=localhost", "root", "");

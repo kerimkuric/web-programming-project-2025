@@ -1,5 +1,7 @@
 <?php
 
+require_once __DIR__ . '/../data/roles.php';
+
 /**
  * @OA\Get(
  *     path="/api/genres",
@@ -13,6 +15,8 @@
  */
 Flight::route('GET /api/genres', function()  {
     try {
+        LoggerMiddleware::logRequest();
+        // Public route - no authentication required
         $genres = Flight::genreService()->getAll();
         Flight::json([
             'success' => true,
@@ -20,10 +24,7 @@ Flight::route('GET /api/genres', function()  {
             'count' => count($genres)
         ], 200);
     } catch (Exception $e) {
-        Flight::json([
-            'success' => false,
-            'message' => $e->getMessage()
-        ], 500);
+        ErrorHandlerMiddleware::handleError($e);
     }
 });
 
@@ -51,6 +52,8 @@ Flight::route('GET /api/genres', function()  {
  */
 Flight::route('GET /api/genres/@id', function($id)  {
     try {
+        LoggerMiddleware::logRequest();
+        // Public route - no authentication required
         $genre = Flight::genreService()->getById($id);
         if ($genre) {
             Flight::json([
@@ -64,10 +67,7 @@ Flight::route('GET /api/genres/@id', function($id)  {
             ], 404);
         }
     } catch (Exception $e) {
-        Flight::json([
-            'success' => false,
-            'message' => $e->getMessage()
-        ], 500);
+        ErrorHandlerMiddleware::handleError($e);
     }
 });
 
@@ -95,6 +95,8 @@ Flight::route('GET /api/genres/@id', function($id)  {
  */
 Flight::route('POST /api/genres', function()  {
     try {
+        Flight::auth_middleware()->authorizeRole(Roles::ADMIN);
+        
         // Get request body
         $rawBody = Flight::request()->getBody();
         $data = json_decode($rawBody, true);
@@ -121,10 +123,7 @@ Flight::route('POST /api/genres', function()  {
             'data' => $genre
         ], 201);
     } catch (Exception $e) {
-        Flight::json([
-            'success' => false,
-            'message' => $e->getMessage()
-        ], 400);
+        ErrorHandlerMiddleware::handleError($e);
     }
 });
 
@@ -158,6 +157,8 @@ Flight::route('POST /api/genres', function()  {
  */
 Flight::route('PUT /api/genres/@id', function($id)  {
     try {
+        Flight::auth_middleware()->authorizeRole(Roles::ADMIN);
+        
         // Get request body
         $rawBody = Flight::request()->getBody();
         $data = json_decode($rawBody, true);
@@ -193,10 +194,7 @@ Flight::route('PUT /api/genres/@id', function($id)  {
             'data' => $updatedGenre
         ], 200);
     } catch (Exception $e) {
-        Flight::json([
-            'success' => false,
-            'message' => $e->getMessage()
-        ], 400);
+        ErrorHandlerMiddleware::handleError($e);
     }
 });
 
@@ -224,6 +222,8 @@ Flight::route('PUT /api/genres/@id', function($id)  {
  */
 Flight::route('DELETE /api/genres/@id', function($id)  {
     try {
+        Flight::auth_middleware()->authorizeRole(Roles::ADMIN);
+        
         $genre = Flight::genreService()->getById($id);
         if (!$genre) {
             Flight::json([
@@ -240,10 +240,7 @@ Flight::route('DELETE /api/genres/@id', function($id)  {
             'message' => 'Genre deleted successfully'
         ], 200);
     } catch (Exception $e) {
-        Flight::json([
-            'success' => false,
-            'message' => $e->getMessage()
-        ], 500);
+        ErrorHandlerMiddleware::handleError($e);
     }
 });
 
