@@ -1,7 +1,13 @@
 ﻿<div class="view-header">
   <h1>Books</h1>
-  <a href="#/books" class="btn btn-sm btn-outline-primary">Add Book</a>
+  <a href="#/books" class="btn btn-sm btn-outline-primary admin-only" id="addBookBtn" style="display: none;">Add Book</a>
 </div>
+<script>
+  // Show/hide admin buttons
+  if (AuthService.isAuthenticated() && AuthService.isAdmin()) {
+    document.getElementById('addBookBtn').style.display = 'inline-block';
+  }
+</script>
 <div class="card card-shadow">
   <div class="card-body">
     <div class="input-group mb-3">

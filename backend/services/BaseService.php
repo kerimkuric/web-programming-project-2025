@@ -21,6 +21,10 @@ class BaseService {
         return $this->dao->insert($data);
     }
 
+    public function add($data) {
+        return $this->dao->add($data);
+    }
+
     public function update($id, $data) {
         return $this->dao->update($id, $data);
     }

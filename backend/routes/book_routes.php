@@ -1,5 +1,7 @@
 <?php
 
+require_once __DIR__ . '/../data/roles.php';
+
 /**
  * @OA\Get(
  *     path="/api/books",
@@ -13,6 +15,7 @@
  */
 Flight::route('GET /api/books', function()  {
     try {
+        // Public route - no authentication required
         $books = Flight::bookService()->getAll();
         Flight::json([
             'success' => true,
@@ -51,6 +54,7 @@ Flight::route('GET /api/books', function()  {
  */
 Flight::route('GET /api/books/@id', function($id)  {
     try {
+        // Public route - no authentication required
         $book = Flight::bookService()->getById($id);
         if ($book) {
             Flight::json([
@@ -99,6 +103,8 @@ Flight::route('GET /api/books/@id', function($id)  {
  */
 Flight::route('POST /api/books', function()  {
     try {
+        Flight::auth_middleware()->authorizeRole(Roles::ADMIN);
+        
         // Get request body
         $rawBody = Flight::request()->getBody();
         $data = json_decode($rawBody, true);
@@ -128,7 +134,7 @@ Flight::route('POST /api/books', function()  {
         Flight::json([
             'success' => false,
             'message' => $e->getMessage()
-        ], 400);
+        ], 500);
     }
 });
 
@@ -166,6 +172,8 @@ Flight::route('POST /api/books', function()  {
  */
 Flight::route('PUT /api/books/@id', function($id)  {
     try {
+        Flight::auth_middleware()->authorizeRole(Roles::ADMIN);
+        
         // Get request body
         $rawBody = Flight::request()->getBody();
         $data = json_decode($rawBody, true);
@@ -204,7 +212,7 @@ Flight::route('PUT /api/books/@id', function($id)  {
         Flight::json([
             'success' => false,
             'message' => $e->getMessage()
-        ], 400);
+        ], 500);
     }
 });
 
@@ -232,6 +240,8 @@ Flight::route('PUT /api/books/@id', function($id)  {
  */
 Flight::route('DELETE /api/books/@id', function($id)  {
     try {
+        Flight::auth_middleware()->authorizeRole(Roles::ADMIN);
+        
         $book = Flight::bookService()->getById($id);
         if (!$book) {
             Flight::json([
@@ -275,6 +285,7 @@ Flight::route('DELETE /api/books/@id', function($id)  {
  */
 Flight::route('GET /api/books/author/@authorId', function($authorId)  {
     try {
+        // Public route - no authentication required
         $books = Flight::bookService()->getByAuthor($authorId);
         Flight::json([
             'success' => true,
@@ -309,6 +320,7 @@ Flight::route('GET /api/books/author/@authorId', function($authorId)  {
  */
 Flight::route('GET /api/books/genre/@genreId', function($genreId)  {
     try {
+        // Public route - no authentication required
         $books = Flight::bookService()->getByGenre($genreId);
         Flight::json([
             'success' => true,

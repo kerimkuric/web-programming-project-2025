@@ -1,5 +1,7 @@
 <?php
 
+require_once __DIR__ . '/../data/roles.php';
+
 /**
  * @OA\Get(
  *     path="/api/authors",
@@ -13,6 +15,7 @@
  */
 Flight::route('GET /api/authors', function() {
     try {
+        // Public route - no authentication required
         $authors = Flight::authorService()->getAll();
         Flight::json([
             'success' => true,
@@ -51,6 +54,7 @@ Flight::route('GET /api/authors', function() {
  */
 Flight::route('GET /api/authors/@id', function($id) {
     try {
+        // Public route - no authentication required
         $author = Flight::authorService()->getById($id);
         if ($author) {
             Flight::json([
@@ -96,6 +100,8 @@ Flight::route('GET /api/authors/@id', function($id) {
  */
 Flight::route('POST /api/authors', function() {
     try {
+        Flight::auth_middleware()->authorizeRole(Roles::ADMIN);
+        
         // Get request body
         $rawBody = Flight::request()->getBody();
         $data = json_decode($rawBody, true);
@@ -125,7 +131,7 @@ Flight::route('POST /api/authors', function() {
         Flight::json([
             'success' => false,
             'message' => $e->getMessage()
-        ], 400);
+        ], 500);
     }
 });
 
@@ -160,6 +166,8 @@ Flight::route('POST /api/authors', function() {
  */
 Flight::route('PUT /api/authors/@id', function($id) {
     try {
+        Flight::auth_middleware()->authorizeRole(Roles::ADMIN);
+        
         // Get request body
         $rawBody = Flight::request()->getBody();
         $data = json_decode($rawBody, true);
@@ -198,7 +206,7 @@ Flight::route('PUT /api/authors/@id', function($id) {
         Flight::json([
             'success' => false,
             'message' => $e->getMessage()
-        ], 400);
+        ], 500);
     }
 });
 
@@ -226,6 +234,8 @@ Flight::route('PUT /api/authors/@id', function($id) {
  */
 Flight::route('DELETE /api/authors/@id', function($id) {
     try {
+        Flight::auth_middleware()->authorizeRole(Roles::ADMIN);
+        
         $author = Flight::authorService()->getById($id);
         if (!$author) {
             Flight::json([
@@ -269,6 +279,7 @@ Flight::route('DELETE /api/authors/@id', function($id) {
  */
 Flight::route('GET /api/authors/country/@country', function($country) {
     try {
+        // Public route - no authentication required
         $authors = Flight::authorService()->getByCountry($country);
         Flight::json([
             'success' => true,

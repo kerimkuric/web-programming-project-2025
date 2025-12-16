@@ -1,8 +1,9 @@
 <?php
-<?php
+require_once __DIR__ . '/config/Config.php';
+
 function setupDatabase() {
     try {
-        $pdo = new PDO("mysql:host=localhost", "root", "");
+        $pdo = new PDO("mysql:host=" . Config::DB_HOST() . ";port=" . Config::DB_PORT(), Config::DB_USER(), Config::DB_PASSWORD());
         $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
         
         // Check if database exists
@@ -16,9 +17,19 @@ function setupDatabase() {
             $pdo->exec("CREATE DATABASE library_schema CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci");
             
             // Import schema
-            $schema = file_get_contents(__DIR__ . '/../database/library_schema.sql');
             $pdo->exec("USE library_schema");
-            $pdo->exec($schema);
+            $schema = file_get_contents(__DIR__ . '/../database/library_schema.sql');
+            
+            // Remove comments and split into statements
+            $schema = preg_replace('/--.*$/m', '', $schema); // Remove single-line comments
+            $schema = preg_replace('/\/\*.*?\*\//s', '', $schema); // Remove multi-line comments
+            $statements = array_filter(array_map('trim', explode(';', $schema)));
+            
+            foreach ($statements as $statement) {
+                if (!empty($statement)) {
+                    $pdo->exec($statement);
+                }
+            }
             
             echo "Database and tables created successfully!\n";
         } else {
@@ -39,7 +50,17 @@ function setupDatabase() {
             if (!empty($missing)) {
                 echo "Missing tables found. Recreating: " . implode(", ", $missing) . "\n";
                 $schema = file_get_contents(__DIR__ . '/../database/library_schema.sql');
-                $pdo->exec($schema);
+                
+                // Remove comments and split into statements
+                $schema = preg_replace('/--.*$/m', '', $schema); // Remove single-line comments
+                $schema = preg_replace('/\/\*.*?\*\//s', '', $schema); // Remove multi-line comments
+                $statements = array_filter(array_map('trim', explode(';', $schema)));
+                
+                foreach ($statements as $statement) {
+                    if (!empty($statement)) {
+                        $pdo->exec($statement);
+                    }
+                }
                 echo "Tables recreated successfully!\n";
             } else {
                 echo "All required tables exist.\n";

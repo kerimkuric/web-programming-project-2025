@@ -1,5 +1,7 @@
 <?php
 
+require_once __DIR__ . '/../data/roles.php';
+
 /**
  * @OA\Get(
  *     path="/api/users",
@@ -23,7 +25,13 @@
  */
 Flight::route('GET /api/users', function() {
     try {
+        Flight::auth_middleware()->authorizeRole(Roles::ADMIN);
+        
         $users = Flight::userService()->getAll();
+        // Remove password hashes from response
+        foreach ($users as &$user) {
+            unset($user['password_hash']);
+        }
         Flight::json([
             'success' => true,
             'data' => $users,
@@ -66,8 +74,17 @@ Flight::route('GET /api/users', function() {
  */
 Flight::route('GET /api/users/@id', function($id) {
     try {
+        $user = Flight::get('user');
+        $currentUserId = $user->id;
+        
+        // Users can only view their own profile, admins can view any profile
+        if ($user->role !== Roles::ADMIN && $currentUserId != $id) {
+            Flight::halt(403, 'Access denied. You can only view your own profile.');
+        }
+        
         $user = Flight::userService()->getById($id);
         if ($user) {
+            unset($user['password_hash']);
             Flight::json([
                 'success' => true,
                 'data' => $user
@@ -120,6 +137,8 @@ Flight::route('GET /api/users/@id', function($id) {
  */
 Flight::route('POST /api/users', function() {
     try {
+        Flight::auth_middleware()->authorizeRole(Roles::ADMIN);
+        
         // Get request body
         $rawBody = Flight::request()->getBody();
         $data = json_decode($rawBody, true);
@@ -139,6 +158,7 @@ Flight::route('POST /api/users', function() {
 
         $userId = Flight::userService()->createUser($data);
         $user = Flight::userService()->getById($userId);
+        unset($user['password_hash']);
         
         Flight::json([
             'success' => true,
@@ -149,7 +169,7 @@ Flight::route('POST /api/users', function() {
         Flight::json([
             'success' => false,
             'message' => $e->getMessage()
-        ], 400);
+        ], 500);
     }
 });
 
@@ -191,6 +211,14 @@ Flight::route('POST /api/users', function() {
  */
 Flight::route('PUT /api/users/@id', function($id) {
     try {
+        $user = Flight::get('user');
+        $currentUserId = $user->id;
+        
+        // Users can only update their own profile (except is_admin field), admins can update any profile
+        if ($user->role !== Roles::ADMIN && $currentUserId != $id) {
+            Flight::halt(403, 'Access denied. You can only update your own profile.');
+        }
+        
         // Get request body
         $rawBody = Flight::request()->getBody();
         $data = json_decode($rawBody, true);
@@ -207,6 +235,11 @@ Flight::route('PUT /api/users/@id', function($id) {
             ], 400);
             return;
         }
+        
+        // Non-admins cannot change is_admin field
+        if ($user->role !== Roles::ADMIN && isset($data['is_admin'])) {
+            Flight::halt(403, 'Access denied. Cannot change admin status.');
+        }
 
         $user = Flight::userService()->getById($id);
         if (!$user) {
@@ -219,6 +252,7 @@ Flight::route('PUT /api/users/@id', function($id) {
 
         Flight::userService()->updateUser($id, $data);
         $updatedUser = Flight::userService()->getById($id);
+        unset($updatedUser['password_hash']);
         
         Flight::json([
             'success' => true,
@@ -229,7 +263,7 @@ Flight::route('PUT /api/users/@id', function($id) {
         Flight::json([
             'success' => false,
             'message' => $e->getMessage()
-        ], 400);
+        ], 500);
     }
 });
 
@@ -266,6 +300,8 @@ Flight::route('PUT /api/users/@id', function($id) {
  */
 Flight::route('DELETE /api/users/@id', function($id) {
     try {
+        Flight::auth_middleware()->authorizeRole(Roles::ADMIN);
+        
         $id = (int)$id;
         $user = Flight::userService()->getById($id);
         if (!$user) {
@@ -326,8 +362,11 @@ Flight::route('DELETE /api/users/@id', function($id) {
  */
 Flight::route('GET /api/users/email/@email', function($email) {
     try {
+        Flight::auth_middleware()->authorizeRole(Roles::ADMIN);
+        
         $user = Flight::userService()->getByEmail($email);
         if ($user) {
+            unset($user['password_hash']);
             Flight::json([
                 'success' => true,
                 'data' => $user
