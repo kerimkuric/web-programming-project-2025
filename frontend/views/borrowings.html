@@ -1,80 +1,65 @@
-﻿<div class="view-header">
+﻿<div class="view-header d-flex justify-content-between align-items-center">
   <h1>Borrowings</h1>
-  <a href="#/borrowings" class="btn btn-sm btn-outline-primary">New Borrowing</a>
+  <button class="btn btn-sm btn-outline-primary" id="addBorrowingBtn">New Borrowing</button>
 </div>
+
+<div class="card card-shadow mb-4">
+  <div class="card-body">
+    <h5 class="card-title">Create New Borrowing</h5>
+    <form id="borrowingForm">
+      <div class="row g-3">
+        <div class="col-md-6">
+          <label class="form-label">Book <span class="text-danger">*</span></label>
+          <select name="book_id" id="borrowingBook" class="form-select" required></select>
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">User <span class="text-danger">*</span></label>
+          <select name="user_id" id="borrowingUser" class="form-select" required></select>
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">Borrow Date <span class="text-danger">*</span></label>
+          <input type="date" name="borrow_date" id="borrowingDate" class="form-control" required />
+        </div>
+        <div class="col-12">
+          <button type="submit" class="btn btn-primary">Create Borrowing</button>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+
 <div class="card card-shadow">
   <div class="card-body">
     <div class="table-responsive">
       <table class="table align-middle">
-        <thead><tr><th>Book</th><th>User</th><th>Borrowed</th><th>Due</th><th>Status</th></tr></thead>
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Book</th>
+            <th>User</th>
+            <th>Borrow Date</th>
+            <th>Return Date</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
         <tbody id="borrowingsTableBody">
-          <tr><td colspan="5" class="text-center">Loading...</td></tr>
+          <tr><td colspan="6" class="text-center">Loading...</td></tr>
         </tbody>
       </table>
     </div>
   </div>
 </div>
+
 <script>
-  (function() {
-    const token = localStorage.getItem("user_token");
-    if (!token) {
-      window.location.hash = '#/login';
-      return;
+  if (!AuthService.isAuthenticated()) {
+    window.location.hash = '#/login';
+  } else {
+    // Set default date to today
+    const today = new Date().toISOString().split('T')[0];
+    const dateInput = document.getElementById('borrowingDate');
+    if (dateInput) {
+      dateInput.value = today;
     }
-    
-    let allBooks = [];
-    let allUsers = [];
-    
-    function loadBooks() {
-      RestClient.get('books', function(response) {
-        if (response.success && response.data) {
-          allBooks = response.data;
-          loadUsers();
-        } else {
-          loadBorrowings();
-        }
-      }, function() {
-        loadBorrowings();
-      });
-    }
-    
-    function loadUsers() {
-      RestClient.get('users', function(response) {
-        if (response.success && response.data) {
-          allUsers = response.data;
-        }
-        loadBorrowings();
-      }, function() {
-        loadBorrowings();
-      });
-    }
-    
-    function loadBorrowings() {
-      RestClient.get('borrowings', function(response) {
-        const tbody = document.getElementById('borrowingsTableBody');
-        if (response.success && response.data && response.data.length > 0) {
-          tbody.innerHTML = response.data.map(borrowing => {
-            const book = allBooks.find(b => b.book_id === borrowing.book_id);
-            const user = allUsers.find(u => u.user_id === borrowing.user_id);
-            const isReturned = borrowing.return_date !== null;
-            const statusClass = isReturned ? 'bg-success' : 'bg-warning text-dark';
-            const statusText = isReturned ? 'Returned' : 'On loan';
-            return `<tr>
-              <td>${book ? book.title : ''}</td>
-              <td>${user ? user.name : ''}</td>
-              <td>${borrowing.borrow_date || ''}</td>
-              <td>${borrowing.due_date || ''}</td>
-              <td><span class="badge ${statusClass}">${statusText}</span></td>
-            </tr>`;
-          }).join('');
-        } else {
-          tbody.innerHTML = '<tr><td colspan="5" class="text-center">No borrowings found</td></tr>';
-        }
-      }, function() {
-        document.getElementById('borrowingsTableBody').innerHTML = '<tr><td colspan="5" class="text-center text-danger">Failed to load borrowings</td></tr>';
-      });
-    }
-    
-    loadBooks();
-  })();
+    BorrowingService.initBorrowingsView();
+  }
 </script>

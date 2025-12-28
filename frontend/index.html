@@ -43,57 +43,20 @@
   <script src="./utils/constants.js"></script>
   <script src="./utils/rest-client.js"></script>
   <script src="./utils/utils.js"></script>
-  <script src="./services/user-service.js"></script>
+  <script src="./assets/js/api.js"></script>
+  <script src="./services/AuthService.js"></script>
+  <script src="./services/UserService.js"></script>
+  <script src="./services/DashboardService.js"></script>
+  <script src="./services/BookService.js"></script>
+  <script src="./services/AuthorService.js"></script>
+  <script src="./services/GenreService.js"></script>
+  <script src="./services/BorrowingService.js"></script>
+  <script src="./services/NavigationService.js"></script>
   <script src="./assets/js/app.js"></script>
   <script>
-    // Update navigation based on auth status
+    // Initialize navigation service when DOM is ready
     $(document).ready(function() {
-      UserService.init();
-      
-      function updateNavigation() {
-        const token = localStorage.getItem("user_token");
-        const isAuth = token && token !== undefined;
-        
-        if (isAuth) {
-          const user = UserService.getCurrentUser();
-          const isAdmin = user && user.role === Constants.ADMIN_ROLE;
-          
-          // Show/hide auth links
-          $('#loginNav').hide();
-          $('#registerNav').hide();
-          $('#profileNav').removeClass('d-none');
-          $('#logoutNav').removeClass('d-none');
-          
-          // Show/hide admin-only links
-          $('.admin-only').toggle(isAdmin);
-        } else {
-          $('#loginNav').show();
-          $('#registerNav').show();
-          $('#profileNav').addClass('d-none');
-          $('#logoutNav').addClass('d-none');
-          $('.admin-only').hide();
-        }
-      }
-      
-      updateNavigation();
-      
-      // Logout handler
-      $('#logoutBtn').on('click', function(e) {
-        e.preventDefault();
-        UserService.logout();
-      });
-      
-      // Update navigation on hash change
-      $(window).on('hashchange', updateNavigation);
-      
-      // Check auth on page load
-      const protectedRoutes = ['#/dashboard', '#/profile', '#/users'];
-      const currentHash = window.location.hash || '#/dashboard';
-      const token = localStorage.getItem("user_token");
-      
-      if (!token && protectedRoutes.some(route => currentHash.startsWith(route))) {
-        window.location.hash = '#/login';
-      }
+      NavigationService.init();
     });
   </script>
 </body>

@@ -1,45 +1,72 @@
-﻿<div class="view-header">
+﻿<div class="view-header d-flex justify-content-between align-items-center">
   <h1>Users</h1>
-  <a href="#/register" class="btn btn-sm btn-outline-primary admin-only" id="addUserBtn" style="display: none;">Register User</a>
+  <button class="btn btn-sm btn-outline-primary" id="addUserBtn" style="display: none;">Add User</button>
 </div>
+
+<div class="card card-shadow mb-4">
+  <div class="card-body">
+    <h5 class="card-title" id="userFormTitle">Add New User</h5>
+    <form id="userForm">
+      <div class="row g-3">
+        <div class="col-md-6">
+          <label class="form-label">Name <span class="text-danger">*</span></label>
+          <input type="text" name="name" id="userName" class="form-control" required minlength="2" />
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">Email <span class="text-danger">*</span></label>
+          <input type="email" name="email" id="userEmail" class="form-control" required />
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">Phone</label>
+          <input type="text" name="phone" id="userPhone" class="form-control" pattern="^[\+]?[0-9\-\(\)\s]+$" />
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">Password <span class="text-danger">*</span></label>
+          <input type="password" name="password" id="userPassword" class="form-control" minlength="6" />
+          <small class="form-text text-muted">Leave empty when updating existing user</small>
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">Role <span class="text-danger">*</span></label>
+          <select name="role" id="userRole" class="form-select" required>
+            <option value="user">User</option>
+            <option value="admin">Admin</option>
+          </select>
+        </div>
+        <div class="col-12">
+          <button type="submit" class="btn btn-primary">Save User</button>
+          <button type="reset" class="btn btn-secondary" onclick="document.getElementById('userForm').dataset.userId = ''; document.getElementById('userFormTitle').textContent = 'Add New User';">Reset</button>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+
 <div class="card card-shadow">
   <div class="card-body">
     <div class="table-responsive">
       <table class="table align-middle">
-        <thead><tr><th>Name</th><th>Email</th><th>Phone</th><th>Role</th><th></th></tr></thead>
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Name</th>
+            <th>Email</th>
+            <th>Phone</th>
+            <th>Role</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
         <tbody id="usersTableBody">
-          <tr><td colspan="5" class="text-center">Loading...</td></tr>
+          <tr><td colspan="6" class="text-center">Loading...</td></tr>
         </tbody>
       </table>
     </div>
   </div>
 </div>
+
 <script>
-  (function() {
-    const user = UserService.getCurrentUser();
-    if (!user || user.role !== Constants.ADMIN_ROLE) {
-      window.location.hash = '#/dashboard';
-      return;
-    }
-    document.getElementById('addUserBtn').style.display = 'inline-block';
-    
-    RestClient.get('users', function(response) {
-      const tbody = document.getElementById('usersTableBody');
-      if (response.success && response.data && response.data.length > 0) {
-        tbody.innerHTML = response.data.map(user => 
-          `<tr>
-            <td>${user.name || ''}</td>
-            <td>${user.email || ''}</td>
-            <td>${user.phone || ''}</td>
-            <td>${user.is_admin ? 'Admin' : 'Member'}</td>
-            <td><button class="btn btn-sm btn-outline-secondary">View</button></td>
-          </tr>`
-        ).join('');
-      } else {
-        tbody.innerHTML = '<tr><td colspan="5" class="text-center">No users found</td></tr>';
-      }
-    }, function(error) {
-      document.getElementById('usersTableBody').innerHTML = '<tr><td colspan="5" class="text-center text-danger">Failed to load users</td></tr>';
-    });
-  })();
+  if (!AuthService.isAuthenticated()) {
+    window.location.hash = '#/login';
+  } else {
+    UserService.initUsersView();
+  }
 </script>

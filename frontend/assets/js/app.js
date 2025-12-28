@@ -13,8 +13,21 @@
     '#/profile': 'profile.html'
   };
 
+  // Protected routes that require authentication
+  const protectedRoutes = ['#/dashboard', '#/profile', '#/users', '#/books', '#/authors', '#/genres', '#/borrowings'];
+
   async function loadView(hash){
-    const route = routes[hash] || routes['#/dashboard'];
+    // Check if route is protected and user is not authenticated
+    const token = localStorage.getItem("lms_token");
+    const isProtected = protectedRoutes.some(route => hash.startsWith(route));
+    
+    if (isProtected && !token) {
+      // Redirect to login for protected routes
+      window.location.hash = '#/login';
+      return;
+    }
+
+    const route = routes[hash] || routes['#/login'];
     try {
       const res = await fetch(`./views/${route}`, { cache: 'no-cache' });
       const html = await res.text();
@@ -84,6 +97,13 @@
   window.addEventListener('hashchange', () => loadView(location.hash));
   document.addEventListener('click', handleClick);
 
-  if(!location.hash){ location.hash = '#/dashboard'; }
-  loadView(location.hash);
+  // Initial route - check auth first
+  const token = localStorage.getItem("lms_token");
+  const initialHash = location.hash || '#/dashboard';
+  
+  if (!token && initialHash !== '#/login' && initialHash !== '#/register') {
+    location.hash = '#/login';
+  } else {
+    loadView(initialHash);
+  }
 })();
