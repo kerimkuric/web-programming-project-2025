@@ -1,6 +1,6 @@
 // API Client with automatic authentication
 const API = {
-    BASE_URL: 'http://localhost/library-management-system-2025/backend/index.php/api',
+    BASE_URL: Constants.PROJECT_BASE_URL.replace(/\/$/, ''), // Remove trailing slash if present
     
     // Get auth headers
     getHeaders(includeAuth = true) {
@@ -9,7 +9,8 @@ const API = {
         };
         
         if (includeAuth && AuthService.isAuthenticated()) {
-            headers['Authorization'] = `Bearer ${AuthService.getToken()}`;
+            const token = AuthService.getToken();
+            headers['Authorization'] = token.startsWith('Bearer ') ? token : `Bearer ${token}`;
         }
         
         return headers;

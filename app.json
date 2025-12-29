@@ -1,0 +1,32 @@
+{
+  "name": "Library Management System",
+  "description": "A web application for managing library operations",
+  "repository": "https://github.com/yourusername/web-programming-project-2025",
+  "logo": "https://via.placeholder.com/150",
+  "keywords": ["php", "library", "management", "rest-api"],
+  "addons": [
+    "cleardb:ignite"
+  ],
+  "env": {
+    "JWT_SECRET": {
+      "description": "Secret key for JWT token generation",
+      "generator": "secret"
+    },
+    "APP_ENV": {
+      "description": "Application environment",
+      "value": "production"
+    }
+  },
+  "formation": {
+    "web": {
+      "quantity": 1,
+      "size": "free"
+    }
+  },
+  "buildpacks": [
+    {
+      "url": "heroku/php"
+    }
+  ]
+}
+

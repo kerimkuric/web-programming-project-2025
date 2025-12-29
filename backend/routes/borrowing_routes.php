@@ -23,7 +23,7 @@ Flight::route('GET /api/borrowings', function()  {
         
         // Admin sees all, regular users see only their own
         if ($currentUser['is_admin']) {
-            $borrowings = Flight::borrowingService()->getAll();
+            $borrowings = Flight::borrowingService()->getAllWithDetails();
         } else {
             $borrowings = Flight::borrowingService()->getByUserId($currentUser['user_id']);
         }
@@ -72,7 +72,7 @@ Flight::route('GET /api/borrowings/@id', function($id)  {
         }
         
         $currentUser = AuthMiddleware::getCurrentUser();
-        $borrowing = Flight::borrowingService()->getById($id);
+        $borrowing = Flight::borrowingService()->getByIdWithDetails($id);
         
         if (!$borrowing) {
             Flight::json([
@@ -169,7 +169,7 @@ Flight::route('POST /api/borrowings', function()  {
         }
 
         $borrowingId = Flight::borrowingService()->createBorrowing($data);
-        $borrowing = Flight::borrowingService()->getById($borrowingId);
+        $borrowing = Flight::borrowingService()->getByIdWithDetails($borrowingId);
         
         Flight::json([
             'success' => true,
@@ -240,7 +240,7 @@ Flight::route('PUT /api/borrowings/@id', function($id)  {
             return;
         }
 
-        $borrowing = Flight::borrowingService()->getById($id);
+        $borrowing = Flight::borrowingService()->getByIdWithDetails($id);
         if (!$borrowing) {
             Flight::json([
                 'success' => false,
@@ -295,7 +295,7 @@ Flight::route('DELETE /api/borrowings/@id', function($id)  {
             return; // Response already sent by middleware
         }
         
-        $borrowing = Flight::borrowingService()->getById($id);
+        $borrowing = Flight::borrowingService()->getByIdWithDetails($id);
         if (!$borrowing) {
             Flight::json([
                 'success' => false,

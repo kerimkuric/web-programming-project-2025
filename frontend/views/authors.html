@@ -1,22 +1,63 @@
-﻿<div class="view-header">
+﻿<div class="view-header d-flex justify-content-between align-items-center">
   <h1>Authors</h1>
-  <a href="#/authors" class="btn btn-sm btn-outline-primary admin-only" id="addAuthorBtn" style="display: none;">Add Author</a>
-<script>
-  if (AuthService.isAuthenticated() && AuthService.isAdmin()) {
-    document.getElementById('addAuthorBtn').style.display = 'inline-block';
-  }
-</script>
+  <button class="btn btn-sm btn-outline-primary admin-only" id="addAuthorBtn" style="display: none;">Add Author</button>
 </div>
+
+<div class="card card-shadow mb-4 admin-only" style="display: none;">
+  <div class="card-body">
+    <h5 class="card-title" id="authorFormTitle">Add New Author</h5>
+    <form id="authorForm">
+      <div class="row g-3">
+        <div class="col-md-6">
+          <label class="form-label">Name <span class="text-danger">*</span></label>
+          <input type="text" name="name" id="authorName" class="form-control" required minlength="2" />
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">Nationality</label>
+          <input type="text" name="nationality" id="authorNationality" class="form-control" maxlength="50" />
+        </div>
+        <div class="col-12">
+          <label class="form-label">Biography</label>
+          <textarea name="biography" id="authorBiography" class="form-control" rows="3" maxlength="1000"></textarea>
+        </div>
+        <div class="col-12">
+          <button type="submit" class="btn btn-primary">Save Author</button>
+          <button type="reset" class="btn btn-secondary" onclick="document.getElementById('authorForm').dataset.authorId = ''; document.getElementById('authorFormTitle').textContent = 'Add New Author';">Reset</button>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+
 <div class="card card-shadow">
   <div class="card-body">
     <div class="table-responsive">
       <table class="table align-middle">
-        <thead><tr><th>Name</th><th>Country</th><th></th></tr></thead>
-        <tbody>
-          <tr><td>George Orwell</td><td>United Kingdom</td><td><button class="btn btn-sm btn-outline-secondary">View</button></td></tr>
-          <tr><td>Jane Austen</td><td>United Kingdom</td><td><button class="btn btn-sm btn-outline-secondary">View</button></td></tr>
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Name</th>
+            <th>Nationality</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="authorsTableBody">
+          <tr><td colspan="4" class="text-center">Loading...</td></tr>
         </tbody>
       </table>
     </div>
   </div>
 </div>
+
+<script>
+  if (!AuthService.isAuthenticated()) {
+    window.location.hash = '#/login';
+  } else {
+    // Show/hide admin buttons
+    if (AuthService.isAdmin()) {
+      document.getElementById('addAuthorBtn').style.display = 'inline-block';
+      document.querySelector('.admin-only').style.display = 'block';
+    }
+    AuthorService.initAuthorsView();
+  }
+</script>

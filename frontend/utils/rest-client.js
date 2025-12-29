@@ -4,10 +4,13 @@ let RestClient = {
             url: Constants.PROJECT_BASE_URL + url,
             type: "GET",
             beforeSend: function (xhr) {
-                xhr.setRequestHeader(
-                    "Authentication",
-                    localStorage.getItem("user_token")
-                );
+                const token = localStorage.getItem("lms_token");
+                if (token) {
+                    xhr.setRequestHeader(
+                        "Authorization",
+                        token.startsWith('Bearer ') ? token : `Bearer ${token}`
+                    );
+                }
             },
             success: function (response) {
                 if (callback) callback(response);
@@ -25,10 +28,13 @@ let RestClient = {
             contentType: "application/json",
             dataType: "json",
             beforeSend: function (xhr) {
-                xhr.setRequestHeader(
-                    "Authentication",
-                    localStorage.getItem("user_token")
-                );
+                const token = localStorage.getItem("lms_token");
+                if (token) {
+                    xhr.setRequestHeader(
+                        "Authorization",
+                        token.startsWith('Bearer ') ? token : `Bearer ${token}`
+                    );
+                }
             },
             data: data ? JSON.stringify(data) : null,
         })

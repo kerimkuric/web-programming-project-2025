@@ -1,18 +1,59 @@
-﻿<div class="view-header">
+﻿<div class="view-header d-flex justify-content-between align-items-center">
   <h1>Genres</h1>
-  <a href="#/genres" class="btn btn-sm btn-outline-primary admin-only" id="addGenreBtn" style="display: none;">Add Genre</a>
-<script>
-  if (AuthService.isAuthenticated() && AuthService.isAdmin()) {
-    document.getElementById('addGenreBtn').style.display = 'inline-block';
-  }
-</script>
+  <button class="btn btn-sm btn-outline-primary admin-only" id="addGenreBtn" style="display: none;">Add Genre</button>
 </div>
-<div class="card card-shadow">
+
+<div class="card card-shadow mb-4 admin-only" style="display: none;">
   <div class="card-body">
-    <ul class="list-group list-group-flush">
-      <li class="list-group-item d-flex justify-content-between align-items-center">Classic <span class="badge bg-secondary">24</span></li>
-      <li class="list-group-item d-flex justify-content-between align-items-center">Science Fiction <span class="badge bg-secondary">18</span></li>
-      <li class="list-group-item d-flex justify-content-between align-items-center">Mystery <span class="badge bg-secondary">12</span></li>
-    </ul>
+    <h5 class="card-title" id="genreFormTitle">Add New Genre</h5>
+    <form id="genreForm">
+      <div class="row g-3">
+        <div class="col-md-6">
+          <label class="form-label">Name <span class="text-danger">*</span></label>
+          <input type="text" name="name" id="genreName" class="form-control" required minlength="2" />
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">Description</label>
+          <input type="text" name="description" id="genreDescription" class="form-control" maxlength="500" />
+        </div>
+        <div class="col-12">
+          <button type="submit" class="btn btn-primary">Save Genre</button>
+          <button type="reset" class="btn btn-secondary" onclick="document.getElementById('genreForm').dataset.genreId = ''; document.getElementById('genreFormTitle').textContent = 'Add New Genre';">Reset</button>
+        </div>
+      </div>
+    </form>
   </div>
 </div>
+
+<div class="card card-shadow">
+  <div class="card-body">
+    <div class="table-responsive">
+      <table class="table align-middle">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Name</th>
+            <th>Description</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="genresTableBody">
+          <tr><td colspan="4" class="text-center">Loading...</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<script>
+  if (!AuthService.isAuthenticated()) {
+    window.location.hash = '#/login';
+  } else {
+    // Show/hide admin buttons
+    if (AuthService.isAdmin()) {
+      document.getElementById('addGenreBtn').style.display = 'inline-block';
+      document.querySelector('.admin-only').style.display = 'block';
+    }
+    GenreService.initGenresView();
+  }
+</script>

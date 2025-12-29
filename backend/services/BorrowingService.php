@@ -37,25 +37,22 @@ class BorrowingService extends BaseService {
         }
 
         // Check if book is already borrowed (not returned)
-        $existingBorrowings = $this->getAll();
+        $existingBorrowings = $this->getActiveBorrowings();
         foreach ($existingBorrowings as $borrowing) {
             if ($borrowing['book_id'] == $data['book_id'] && empty($borrowing['return_date'])) {
                 throw new Exception('Book is already borrowed and not yet returned.');
             }
         }
 
-        // Validate borrow_date
-        if (empty($data['borrow_date'])) {
-            throw new Exception('Borrow date is required.');
+        // Set default borrow_date to today if not provided
+        if (!isset($data['borrow_date']) || empty($data['borrow_date'])) {
+            $data['borrow_date'] = date('Y-m-d');
         }
+
+        // Validate borrow_date
         $borrowDate = strtotime($data['borrow_date']);
         if ($borrowDate === false) {
             throw new Exception('Invalid borrow date format.');
-        }
-
-        // Set default borrow_date to today if not provided
-        if (!isset($data['borrow_date'])) {
-            $data['borrow_date'] = date('Y-m-d');
         }
 
         // Don't allow return_date on creation (must be set via update)
@@ -139,26 +136,26 @@ class BorrowingService extends BaseService {
 
     // Business logic: Get borrowings by user
     public function getByUserId($userId) {
-        $borrowings = $this->getAll();
-        return array_filter($borrowings, function($borrowing) use ($userId) {
-            return $borrowing['user_id'] == $userId;
-        });
+        return $this->dao->getByUserIdWithDetails($userId);
     }
 
     // Business logic: Get borrowings by book
     public function getByBookId($bookId) {
-        $borrowings = $this->getAll();
-        return array_filter($borrowings, function($borrowing) use ($bookId) {
-            return $borrowing['book_id'] == $bookId;
-        });
+        return $this->dao->getByBookIdWithDetails($bookId);
     }
 
     // Business logic: Get active borrowings (not returned)
     public function getActiveBorrowings() {
-        $borrowings = $this->getAll();
-        return array_filter($borrowings, function($borrowing) {
-            return empty($borrowing['return_date']);
-        });
+        return $this->dao->getActiveWithDetails();
+    }
+
+    // Return all borrowings with book and user details
+    public function getAllWithDetails() {
+        return $this->dao->getAllWithDetails();
+    }
+
+    public function getByIdWithDetails($id) {
+        return $this->dao->getByIdWithDetails($id);
     }
 }
 

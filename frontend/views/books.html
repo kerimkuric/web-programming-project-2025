@@ -1,27 +1,77 @@
-﻿<div class="view-header">
+﻿<div class="view-header d-flex justify-content-between align-items-center">
   <h1>Books</h1>
-  <a href="#/books" class="btn btn-sm btn-outline-primary admin-only" id="addBookBtn" style="display: none;">Add Book</a>
+  <button class="btn btn-sm btn-outline-primary admin-only" id="addBookBtn" style="display: none;">Add Book</button>
 </div>
-<script>
-  // Show/hide admin buttons
-  if (AuthService.isAuthenticated() && AuthService.isAdmin()) {
-    document.getElementById('addBookBtn').style.display = 'inline-block';
-  }
-</script>
+
+<div class="card card-shadow mb-4">
+  <div class="card-body">
+    <h5 class="card-title" id="bookFormTitle">Add New Book</h5>
+    <form id="bookForm">
+      <div class="row g-3">
+        <div class="col-md-6">
+          <label class="form-label">Title <span class="text-danger">*</span></label>
+          <input type="text" name="title" id="bookTitle" class="form-control" required />
+        </div>
+        <div class="col-md-3">
+          <label class="form-label">Author <span class="text-danger">*</span></label>
+          <select name="author_id" id="bookAuthor" class="form-select" required></select>
+        </div>
+        <div class="col-md-3">
+          <label class="form-label">Genre <span class="text-danger">*</span></label>
+          <select name="genre_id" id="bookGenre" class="form-select" required></select>
+        </div>
+        <div class="col-md-3">
+          <label class="form-label">ISBN</label>
+          <input type="text" name="isbn" id="bookIsbn" class="form-control" maxlength="20" />
+        </div>
+        <div class="col-md-3">
+          <label class="form-label">Publication Year</label>
+          <input type="number" name="publication_year" id="bookPublicationYear" class="form-control" min="1000" max="2025" />
+        </div>
+        <div class="col-md-6">
+          <button type="submit" class="btn btn-primary mt-4">Save Book</button>
+          <button type="reset" class="btn btn-secondary mt-4" onclick="document.getElementById('bookForm').dataset.bookId = ''; document.getElementById('bookFormTitle').textContent = 'Add New Book';">Reset</button>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+
 <div class="card card-shadow">
   <div class="card-body">
     <div class="input-group mb-3">
       <span class="input-group-text">Search</span>
-      <input type="text" class="form-control" placeholder="Title, author, ISBN" />
+      <input type="text" class="form-control" id="bookSearch" placeholder="Title, author, ISBN" />
     </div>
     <div class="table-responsive">
-      <table class="table align-middle">
-        <thead><tr><th>Title</th><th>Author</th><th>Genre</th><th>Year</th><th>ISBN</th><th></th></tr></thead>
-        <tbody>
-          <tr><td>The Great Gatsby</td><td>F. Scott Fitzgerald</td><td>Classic</td><td>1925</td><td>9780743273565</td><td><button class="btn btn-sm btn-outline-secondary">View</button></td></tr>
-          <tr><td>1984</td><td>George Orwell</td><td>Dystopian</td><td>1949</td><td>9780451524935</td><td><button class="btn btn-sm btn-outline-secondary">View</button></td></tr>
+      <table class="table align-middle" id="booksTable">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Title</th>
+            <th>Author</th>
+            <th>Genre</th>
+            <th>ISBN</th>
+            <th>Year</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="booksTableBody">
+          <tr><td colspan="7" class="text-center">Loading...</td></tr>
         </tbody>
       </table>
     </div>
   </div>
 </div>
+
+<script>
+  if (!AuthService.isAuthenticated()) {
+    window.location.hash = '#/login';
+  } else {
+    // Show/hide admin buttons
+    if (AuthService.isAdmin()) {
+      document.getElementById('addBookBtn').style.display = 'inline-block';
+    }
+    BookService.initBooksView();
+  }
+</script>
